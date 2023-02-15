@@ -1,0 +1,58 @@
+---
+title: "R Notebook"
+---
+```{r}
+library(dirmult)
+```
+
+
+
+```{r}
+N = 100
+K = 3
+Q = 2
+V = 4
+```
+
+```{r}
+beta_0 = rep(1/2,K)
+theta_0 = rep(1/2,Q)
+eta_0 = array(rep(1/2,K*K*Q),c(K,K,Q))
+xi_0 = array(rep(1/2,K*K*Q),c(K,K,Q))
+
+pi_k = rdirichlet(1,beta_0)
+rho_q = rdirichlet(1,theta_0)
+alpha <- array(rep(NA,K*K*Q),c(K,K,Q))
+for(k in 1:K){
+  for(l in k:K){
+    for(q in 1:Q){
+      alpha[k,l,q] = rbeta(1,eta_0[k,l,q],xi_0[k,l,q])
+      alpha[l,k,q] = alpha[k,l,q]
+    }
+  }
+}
+```
+
+```{r}
+res <- rMSBM(N,V,alpha,pi_k,rho_q,sorted = T)
+```
+
+```{r}
+plot_adjency(res$simulation$A)
+res$simulation$Z
+res$simulation$W
+```
+
+```{r}
+A = res$simulation$A
+rm(beta_0,eta_0,theta_0,xi_0)
+params = initialisation_params_bayesian(A,K=3,Q=2,type_init = "random")
+```
+
+
+```{r}
+model  <-BayesianMixture_SBM(A,K-1,Q,iter_max = 10,n_init = 2)
+model$best
+```
+
+
