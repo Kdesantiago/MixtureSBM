@@ -1,4 +1,4 @@
-## Update
+#---------------- Update parameters ----------------
 
 update_tau_bayesian<-function(A,params,eps_conv=1e-4){
 
@@ -17,8 +17,9 @@ update_tau_bayesian<-function(A,params,eps_conv=1e-4){
   A <- diag_nulle(A)
   old_tau <- tau + 1
 
-
-  while( sum(abs(old_tau - tau)) > eps_conv ){
+  etp <- 0
+  while( (sum(abs(old_tau - tau)) > eps_conv) && etp<50 ){
+    etp <- etp+1
     old_tau <- tau
     for(i in 1:N){
       tau_tmp = tau
@@ -156,36 +157,8 @@ update_xi_bayesian<-function(A,params){
   return(params)
 }
 
-
-## Loss
-
-# Loss_BayesianMSBM <- function(params){
-#
-#   tau = params$tau
-#   u = params$u
-#   beta_k = params$beta_k
-#   theta = params$theta
-#   eta = params$eta
-#   xi = params$xi
-#   beta_0 = params$beta_0
-#   theta_0 = params$theta_0
-#   eta_0 = params$eta_0
-#   xi_0 = params$xi_0
-#
-#   res <- - sum(tau*log(tau)) - sum(u*log(u))
-#
-#   res <- res + log(gamma(sum(beta_0)) * prod(gamma(beta_k)) /(gamma(sum(beta_k)) * prod(gamma(beta_0)))  )
-#
-#
-#   res <- res + log(gamma(sum(theta_0)) * prod(gamma(theta)) /(gamma(sum(theta)) * prod(gamma(theta_0)))  )
-#
-#   res <- res + sum(trig_sup(log( gamma(eta_0 + xi_0) *  gamma(eta) *gamma(xi) / (gamma(eta + xi) *  gamma(eta_0) *gamma(xi_0)) ),diag = F))
-#
-#   return(res)
-#
-# }
-
-Loss_BayesianMSBM2 <- function(params){
+#---------------- Loss ----------------
+Loss_BayesianMSBM <- function(params){
 
   tau = params$tau
   u = params$u
@@ -226,7 +199,8 @@ Loss_BayesianMSBM2 <- function(params){
   return(res)
 
 }
-## VBEM
+
+#---------------- Variational Bayes EM ----------------
 
 VBEM_step<-function(A,params,alternate=T,n_iter_ptfixe=3){
 
@@ -257,6 +231,8 @@ VBEM_step<-function(A,params,alternate=T,n_iter_ptfixe=3){
   return(params)
 }
 
+#---------------- Initialisation ----------------
+
 initialisation_params_bayesian <-function(A,K,Q,beta_0=rep(1/2,K),theta_0=rep(1/2,Q),eta_0=array(rep(1/2,K*K*Q),c(K,K,Q)),xi_0=array(rep(1/2,K*K*Q),c(K,K,Q)),type_init="random"){
   N = nrow(A)
   V = dim(A)[3]
@@ -284,10 +260,6 @@ initialisation_params_bayesian <-function(A,K,Q,beta_0=rep(1/2,K),theta_0=rep(1/
     params$tau <- array(runif(N*K,0,1),dim=c(N,K)) ; params$tau <- params$tau/apply(params$tau,1,sum)
     params$u <- array(runif(N*K,0,1),dim=c(V,Q)) ; params$u <- params$u/apply(params$u,1,sum)
 
-    #params$beta_k <- params$beta_0
-    #params$theta <- params$theta_0
-    #params$eta <- params$eta_0
-    #params$xi <- params$xi_0
     params <- update_beta_bayesian(params)
     params <- update_theta_bayesian(params)
     params <- update_eta_bayesian(A,params)
@@ -298,14 +270,9 @@ initialisation_params_bayesian <-function(A,K,Q,beta_0=rep(1/2,K),theta_0=rep(1/
   return(params)
 }
 
-## Modèle :
 
 
-
-
-
-
-
+#---------------- Model ----------------
 
 BayesianMixture_SBM <-function(A,K,Q,beta_0=rep(1/2,K),theta_0=rep(1/2,Q),eta_0=array(rep(1/2,K*K*Q),c(K,K,Q)),xi_0=array(rep(1/2,K*K*Q),c(K,K,Q)),tol=1e-3,iter_max=10,n_init = 1,alternate=T, Verbose=T,eps_conv=1e-4,type_init="random"){
 
@@ -324,7 +291,7 @@ BayesianMixture_SBM <-function(A,K,Q,beta_0=rep(1/2,K),theta_0=rep(1/2,Q),eta_0=
     print(paste0("------------ Run ",init," ------------"))
     n_iter = 0
     params <- initialisation_params_bayesian(A,K=K,Q=Q,beta_0,theta_0,eta_0,xi_0,type_init)
-    elbo = Loss_BayesianMSBM2(params)
+    elbo = Loss_BayesianMSBM(params)
 
 
     elbo_old <- -Inf
@@ -342,7 +309,7 @@ BayesianMixture_SBM <-function(A,K,Q,beta_0=rep(1/2,K),theta_0=rep(1/2,Q),eta_0=
       if(Verbose){print(paste0("__ Intération n°", n_iter," __"))}
 
       params <- VBEM_step(A,params,alternate,eps_conv)
-      elbo <- Loss_BayesianMSBM2(params)
+      elbo <- Loss_BayesianMSBM(params)
 
 
       if(Verbose){print(paste0("L'Evidence Lower BOund vaut :",round(elbo,2)))}
@@ -359,8 +326,8 @@ BayesianMixture_SBM <-function(A,K,Q,beta_0=rep(1/2,K),theta_0=rep(1/2,Q),eta_0=
   #------------ Output ------------
 
   #output$best
-  output$best <- output$parametres[[which.max(output$elbo[init])]]
-  output$best$elbo <- output$elbo[which.max(output$elbo[init])]
+  output$best <- output$parametres[[which.max(output$elbo)]]
+  output$best$elbo <- output$elbo[which.max(output$elbo)]
   return(output)
 
 }

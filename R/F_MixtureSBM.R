@@ -76,7 +76,7 @@ update_tau <- function(A,params,eps_conv=1e-3){
 
   etp <- 0
 
-  while( sum(abs(old_tau - Tau)) > eps_conv ){
+  while( (sum(abs(old_tau - Tau)) > eps_conv) && etp<50 ){
     etp <- etp+1
     old_tau <- Tau
     log_tau <- matrix(0,N,K)
@@ -347,8 +347,8 @@ Mixture_SBM <-function(A,K,Q,tol,iter_max=10,n_init = 1,alternate=T, Verbose=T,e
   #------------ Output ------------
 
   #output$best
-  output$best <- output$parametres[[which.max(output$elbo[init])]]
-  output$best$elbo <- output$elbo[which.max(output$elbo[init])]
+  output$best <- output$parametres[[which.max(output$elbo)]]
+  output$best$elbo <- output$elbo[which.max(output$elbo)]
   return(output)
 }
 
@@ -377,7 +377,7 @@ ELBO <- function(A,params){
           for(k in 1:K){
             for(l in k:K){
               #new_u[v,q] <- new_u[v,q] * (dbinom(A[i,j,v],1,alpha[k,l,q]) * rho[q])**(tau[i,k] * tau[j,l] )
-              res <- res + tau[i,k] * tau[j,l] * u[v,q] * log(dbinom(A[i,j,v],1,alpha[k,l,q]))
+              res <- res + tau[i,k] * tau[j,l] * u[v,q] * log(dbinom(A[i,j,v],1,alpha[k,l,q]) + .Machine$double.xmin)
             }
           }
         }
@@ -387,12 +387,12 @@ ELBO <- function(A,params){
 
   for(i in 1:(N)){
     for(k in 1:K){
-      res <- res + tau[i,k] * ( log(pi_k[k]) +log(tau[i,k]) )
+      res <- res + tau[i,k] * ( log(pi_k[k] + .Machine$double.xmin) +log(tau[i,k]) + .Machine$double.xmin )
     }
   }
   for(v in 1:(V)){
     for(q in 1:Q){
-      res <- res + u[v,q] * ( log(rho[q]) + log(u[v,q]) )
+      res <- res + u[v,q] * ( log(rho[q] + .Machine$double.xmin) + log(u[v,q]) + .Machine$double.xmin)
     }
   }
   return(res)
