@@ -202,7 +202,7 @@ Loss_BayesianMSBM <- function(params){
 
 #---------------- Variational Bayes EM ----------------
 
-VBEM_step<-function(A,params,alternate=T,n_iter_ptfixe=3){
+VBEM_step<-function(A,params,alternate=T,eps_conv=1e-3){
 
   if(alternate){
     params <- update_u_bayesian(A,params)
@@ -211,7 +211,7 @@ VBEM_step<-function(A,params,alternate=T,n_iter_ptfixe=3){
     params <- update_eta_bayesian(A,params)
     params <- update_xi_bayesian(A,params)
 
-    params <- update_tau_bayesian(A,params,n_iter_ptfixe)
+    params <- update_tau_bayesian(A,params,eps_conv)
     params <- update_beta_bayesian(params)
     params <- update_theta_bayesian(params)
     params <- update_eta_bayesian(A,params)
@@ -220,7 +220,7 @@ VBEM_step<-function(A,params,alternate=T,n_iter_ptfixe=3){
 
   } else{
     params <- update_u_bayesian(A,params)
-    params <- update_tau_bayesian(A,params,n_iter_ptfixe)
+    params <- update_tau_bayesian(A,params,eps_conv)
     params <- update_beta_bayesian(params)
     params <- update_theta_bayesian(params)
     params <- update_eta_bayesian(A,params)
@@ -276,7 +276,7 @@ initialisation_params_bayesian <-function(A,K,Q,beta_0=rep(1/2,K),theta_0=rep(1/
 
 BayesianMixture_SBM <-function(A,K,Q,beta_0=rep(1/2,K),theta_0=rep(1/2,Q),eta_0=array(rep(1/2,K*K*Q),c(K,K,Q)),xi_0=array(rep(1/2,K*K*Q),c(K,K,Q)),tol=1e-3,iter_max=10,n_init = 1,alternate=T, Verbose=T,eps_conv=1e-4,type_init="random"){
 
-  # Déclaration de variables
+
   #------------ Variables ------------
   N = nrow(A)
   V = dim(A)[3]
