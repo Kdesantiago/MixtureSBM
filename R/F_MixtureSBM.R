@@ -48,7 +48,7 @@ update_u <- function(A,params){
           X[k,l] <- t(tau[,k]) %*% tmp %*% tau[,l]
         }
       }
-      log_u[v,q] <- log(rho[q]) + sum(X)
+      log_u[v,q] <- -log(rho[q]) + sum(X)
     }
   }
 
@@ -95,7 +95,7 @@ update_tau <- function(A,params,eps_conv=1e-3){
         }
       }
 
-      log_tau[i,k] <- log_tau[i,k] + log(pi_k[k])
+      log_tau[i,k] <- log_tau[i,k] - log(pi_k[k])
     }
 
 
